@@ -54,12 +54,22 @@ from webwhatsapi.objects.whatsapp_object import WhatsappObject
 ###########################
 '''
 
+class NewMessageObserver:
+    def on_message_received(self, new_messages):
+        for message in new_messages:
+            if message.type == 'chat':
+                print("New message '{}' received from number {}".format(message.content, message.sender.id))
+            else:
+                print("New message of type '{}' received from number {}".format(message.type, message.sender.id))
+                print(message)
+
+
 class RepeatedTimer(object):
     '''
     A generic class that creates a timer of specified interval and calls the
     given function after that interval
     '''
-    
+
     def __init__(self, interval, function, *args, **kwargs):
         ''' Starts a timer of given interval
         @param self:
@@ -83,7 +93,7 @@ class RepeatedTimer(object):
 
     def start(self):
         """Creates a timer and start it"""
-        
+
         if not self.is_running:
             self._timer = threading.Timer(self.interval, self._run)
             self._timer.start()
@@ -127,7 +137,7 @@ semaphores = dict()
 # API key needed for auth with this API, change as per usage
 API_KEY = '5ohsRCA8os7xW7arVagm3O861lMZwFfl'
 # File type allowed to be sent or received
-ALLOWED_EXTENSIONS = ('avi', 'mp4', 'png', 'jpg', 'jpeg', 'gif', 'mp3', 'doc', 'docx', 'pdf')
+ALLOWED_EXTENSIONS = ('csv', 'avi', 'mp4', 'png', 'jpg', 'jpeg', 'gif', 'mp3', 'doc', 'docx', 'pdf')
 # Path to temporarily store static files like images
 STATIC_FILES_PATH = 'static/'
 
@@ -169,7 +179,7 @@ def create_logger():
 
 def init_driver(client_id):
     """Initialises a new driver via webwhatsapi module
-    
+
     @param client_id: ID of user client
     @return webwhatsapi object
     """
@@ -178,7 +188,7 @@ def init_driver(client_id):
     profile_path = CHROME_CACHE_PATH + str(client_id)
     if not os.path.exists(profile_path):
         os.makedirs(profile_path)
-    
+
     # Options to customize chrome window
     chrome_options = [
         'window-size=' + CHROME_WINDOW_SIZE,
@@ -188,20 +198,21 @@ def init_driver(client_id):
         chrome_options.append('--headless')
     if CHROME_DISABLE_GPU:
         chrome_options.append('--disable-gpu')
-    
+
     # Create a whatsapidriver object
     d = WhatsAPIDriver(
-        username=client_id, 
-        profile=profile_path, 
-        client='chrome', 
+        username=client_id,
+        profile=profile_path,
+        client='chrome',
         chrome_options=chrome_options
     )
+    d.subscribe_new_messages(NewMessageObserver())
     return d
 
 
 def init_client(client_id):
     """Initialse a driver for client and store for future reference
-    
+
     @param client_id: ID of client user
     @return whebwhatsapi object
     """
@@ -212,7 +223,7 @@ def init_client(client_id):
 
 def delete_client(client_id, preserve_cache):
     """Delete all objects related to client
-    
+
     @param client_id: ID of client user
     @param preserve_cache: Boolean, whether to delete the chrome profile folder or not
     """
@@ -233,7 +244,7 @@ def delete_client(client_id, preserve_cache):
 
 def init_timer(client_id):
     """Create a timer for the client driver to watch for events
-    
+
     @param client_id: ID of clinet user
     """
     if client_id in timers and timers[client_id]:
@@ -279,7 +290,7 @@ def check_new_messages(client_id):
 
 def get_client_info(client_id):
     """Get the status of a perticular client, as to he/she is connected or not
-    
+
     @param client_id: ID of client user
     @return JSON object {
         "driver_status": webdriver status
@@ -299,7 +310,7 @@ def get_client_info(client_id):
         is_alive = True
     if driver_status == WhatsAPIDriverStatus.LoggedIn:
         is_logged_in = True
-    
+
     return {
         "is_alive": is_alive,
         "is_logged_in": is_logged_in,
@@ -309,7 +320,7 @@ def get_client_info(client_id):
 
 def allowed_file(filename):
     """Check if file as allowed type or not
-    
+
     @param filename: Name of the file to be checked
     @return boolean True or False based on file name check
     """
@@ -353,7 +364,7 @@ def send_media(chat_id, requestObj):
 
 def create_static_profile_path(client_id):
     """Create a profile path folder if not exist
-    
+
     @param client_id: ID of client user
     @return string profile path
     """
@@ -391,13 +402,13 @@ def before_request():
     """This runs before every API request. The function take cares of creating
     driver object is not already created. Also it checks for few prerequisits
     parameters and set global variables for other functions to use
-    
+
     Required paramters for an API hit are:
     auth-key: key string to identify valid request
     client_id: to identify for which client the request is to be run
     """
     global logger
-    
+
     if not request.url_rule:
         abort(404)
 
@@ -408,7 +419,7 @@ def before_request():
     auth_key = request.headers.get('auth-key')
     g.client_id = request.headers.get('client_id')
     rule_parent = request.url_rule.rule.split('/')[1]
-    
+
     if API_KEY and auth_key != API_KEY:
         abort(401, 'you must send valid auth-key')
         raise Exception()
@@ -422,19 +433,19 @@ def before_request():
     if rule_parent != 'admin':
         if g.client_id not in drivers:
             drivers[g.client_id] = init_client(g.client_id)
-        
+
         g.driver = drivers[g.client_id]
         g.driver_status = WhatsAPIDriverStatus.Unknown
-        
+
         if g.driver is not None:
             g.driver_status = g.driver.get_status()
-        
+
         # If driver status is unkown, means driver has closed somehow, reopen it
         if (g.driver_status != WhatsAPIDriverStatus.NotLoggedIn
             and g.driver_status != WhatsAPIDriverStatus.LoggedIn):
             drivers[g.client_id] = init_client(g.client_id)
             g.driver_status = g.driver.get_status()
-        
+
         init_timer(g.client_id)
 
 
@@ -471,7 +482,7 @@ def on_bad_internal_server_error(e):
 
 @app.route('/client', methods=['PUT'])
 def create_client():
-    """Create a new client driver. The driver is automatically created in 
+    """Create a new client driver. The driver is automatically created in
     before_request function."""
     result = False
     if g.client_id in drivers:
@@ -491,7 +502,7 @@ def delete_client():
 
 @app.route('/screen', methods=['GET'])
 def get_screen():
-    """Capture chrome screen image and send it back. If the screen is currently 
+    """Capture chrome screen image and send it back. If the screen is currently
     at qr scanning phase, return the image of qr only, else return image of full
     screen"""
     img_title = 'screen_' + g.client_id + '.png'
@@ -563,7 +574,7 @@ def get_messages(chat_id):
                 msg.chat.send_seen()
             except:
                 pass
-    
+
     return jsonify(msgs)
 
 
