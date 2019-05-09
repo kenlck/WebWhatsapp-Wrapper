@@ -2,6 +2,9 @@
 FROM python:3.7
 
 # Set the working directory to /app
+RUN useradd docker && chown -R docker /app
+USER docker
+VOLUME /app
 WORKDIR /app
 
 # COPY requirements to /app dir

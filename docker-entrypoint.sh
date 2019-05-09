@@ -3,6 +3,6 @@
 # pip install ./
 # pip list
 
-cd sample/flask
+cd ./sample/flask
 pipenv install
 pipenv run uwsgi --ini WebAPI.ini  --wsgi-file wsgi.py --http :9090

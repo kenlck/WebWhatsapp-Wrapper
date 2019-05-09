@@ -14,6 +14,8 @@ services:
      build: .
      environment:
        - SELENIUM=http://firefox:4444/wd/hub
+     ports:
+      - "9090:9001"
      volumes:
        - ".:/app"
      command: /app/docker-entrypoint.sh
@@ -21,8 +23,6 @@ services:
        - selenium
      depends_on:
        - firefox
-     ports:
-      - "9090:9001"
 
 volumes:
   devshm:
