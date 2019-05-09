@@ -21,6 +21,8 @@ services:
        - selenium
      depends_on:
        - firefox
+     ports:
+      - "9090:9001"
 
 volumes:
   devshm:
