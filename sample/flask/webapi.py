@@ -203,7 +203,8 @@ def init_driver(client_id):
     d = WhatsAPIDriver(
         username=client_id,
         profile=profile_path,
-        client='chrome',
+        client='remote',
+        command_executor=os.environ["SELENIUM"],
         chrome_options=chrome_options
     )
     d.subscribe_new_messages(NewMessageObserver())
@@ -687,4 +688,4 @@ def hello():
 
 if __name__ == '__main__':
     # todo: load presaved active client ids
-    app.run()
+    app.run(host='0.0.0.0')
