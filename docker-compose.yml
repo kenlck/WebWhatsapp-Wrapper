@@ -15,7 +15,7 @@ services:
      environment:
        - SELENIUM=http://firefox:4444/wd/hub
      ports:
-      - "9090:9001"
+      - "9090:9090"
      volumes:
        - ".:/app"
      command: /app/docker-entrypoint.sh

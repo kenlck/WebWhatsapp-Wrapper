@@ -2,16 +2,17 @@
 FROM python:3.7
 
 # Set the working directory to /app
+RUN mkdir /app
 RUN useradd docker && chown -R docker /app
-USER docker
 VOLUME /app
 WORKDIR /app
 
 # COPY requirements to /app dir
 COPY requirements.txt /app
 
+USER root
 # Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir --trusted-host pypi.python.org -r requirements.txt
+RUN pip3 install --no-cache-dir --trusted-host pypi.python.org -r requirements.txt
 
 # -- Install Pipenv:
 # RUN apt install software-properties-common

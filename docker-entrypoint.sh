@@ -4,5 +4,5 @@
 # pip list
 
 cd ./sample/flask
-pipenv install
-pipenv run uwsgi --ini WebAPI.ini  --wsgi-file wsgi.py --http :9090
+pipenv install --system --deploy
+pipenv run uwsgi --ini webapi.ini  --wsgi-file wsgi.py --http :9090
