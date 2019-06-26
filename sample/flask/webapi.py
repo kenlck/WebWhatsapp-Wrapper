@@ -36,6 +36,8 @@ import time
 import threading
 import werkzeug
 
+from whatsapi import inbound
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, BASE_DIR)
 
@@ -59,9 +61,12 @@ class NewMessageObserver:
         for message in new_messages:
             if message.type == 'chat':
                 print("New message '{}' received from number {}".format(message.content, message.sender.id))
+                print(message)
+                inbound(message=message)
             else:
                 print("New message of type '{}' received from number {}".format(message.type, message.sender.id))
                 print(message)
+                inbound(message)
 
 
 class RepeatedTimer(object):
