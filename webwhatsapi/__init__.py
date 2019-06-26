@@ -245,13 +245,13 @@ class WhatsAPIDriver(object):
 
     def connect(self):
         self.driver.get(self._URL)
-        
+
         profilePath = ""
         if self.client == "chrome":
             profilePath = ""
         else:
             profilePath = self._profile.path
-        
+
         local_storage_file = os.path.join(profilePath, self._LOCAL_STORAGE_FILE)
         if os.path.exists(local_storage_file):
             with open(local_storage_file) as f:
@@ -562,7 +562,7 @@ class WhatsAPIDriver(object):
         :type message: str
         """
         return self.wapi_functions.sendMessageToID(recipient, message)
-    
+
     def convert_to_base64(self, path):
         """
         :param path: file path
@@ -576,8 +576,8 @@ class WhatsAPIDriver(object):
             archive = b64encode(image_file.read())
             archive = archive.decode('utf-8')
         return 'data:' + content_type + ';base64,' + archive
-    
-    
+
+
     def send_media(self, path, chatid, caption):
         """
             converts the file to base64 and sends it using the sendImage function of wapi.js
@@ -589,8 +589,8 @@ class WhatsAPIDriver(object):
         imgBase64 = self.convert_to_base64(path)
         filename = os.path.split(path)[-1]
         return self.wapi_functions.sendImage(imgBase64, chatid, filename, caption)
-    
-    
+
+
 
     def chat_send_seen(self, chat_id):
         """
@@ -726,7 +726,7 @@ class WhatsAPIDriver(object):
         :return:
         """
         return self.wapi_functions.deleteConversation(chat_id)
-    
+
     def delete_message(self, chat_id, message_array, revoke=False):
         """
         Delete a chat
